@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DailyDash | Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+      /* Dashboard specific styles */
+      .dashboard-container {
+        padding-top: 100px;
+        padding-bottom: 50px;
+      }
+      
+      .news-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+      }
+      
+      .news-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border-color: rgba(255, 107, 107, 0.5);
+      }
+
+      .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        opacity: 0.8;
+      }
+
+      .news-category {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #ff6b6b;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .news-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+      }
+
+      .news-summary {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="bg-animated"></div>
+
+    <!-- Reuse Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top" style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px);">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('hello_world') }}">
+          <svg width="24" height="24" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
+            <rect width="40" height="40" rx="12" fill="white" fill-opacity="0.1"/>
+            <path d="M12 20L18 26L28 14" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          DailyDash
+        </a>
+        
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item"><span class="nav-link text-white-50">Welcome, {{ current_user.username }}</span></li>
+            <li class="nav-item ms-3"><a class="btn btn-outline-custom btn-sm" href="{{ url_for('logout') }}">Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <div class="row mb-5">
+        <div class="col-12">
+          <h1 class="display-5 fw-bold font-monospace text-white">Your Feed</h1>
+          <p class="lead text-white-50">Curated stories for you today.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Mock News Item 1 -->
+        <div class="col-md-4">
+          <div class="news-card">
+            <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
+            <div class="p-4">
+              <div class="news-category">Technology</div>
+              <h3 class="news-title">The Future of AI in Daily Life</h3>
+              <p class="news-summary">How machine learning is quietly reshaping our morning routines and work habits.</p>
+              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mock News Item 2 -->
+        <div class="col-md-4">
+          <div class="news-card">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
+            <div class="p-4">
+              <div class="news-category">Business</div>
+              <h3 class="news-title">Global Markets Rally</h3>
+              <p class="news-summary">Stocks hit record highs as new trade agreements are signed across major economies.</p>
+              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mock News Item 3 -->
+        <div class="col-md-4">
+          <div class="news-card">
+            <img src="https://images.unsplash.com/photo-1518005020951-ecc8e1201633?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
+            <div class="p-4">
+              <div class="news-category">Science</div>
+              <h3 class="news-title">Mars Mission Update</h3>
+              <p class="news-summary">The latest rover sends back high-definition panoramas of the red planet's surface.</p>
+              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
