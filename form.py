@@ -10,7 +10,6 @@ bcrypt = Bcrypt()
 class Form(FlaskForm):
     pass
 
-
 class SignupForm(Form):
     username = StringField(validators=[
                            InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "e.g. NewsReader99"})
@@ -61,7 +60,6 @@ class LoginForm(Form):
               
               
 class FormFactory:
-  
     _instance = None 
     
     def __new__(cls):

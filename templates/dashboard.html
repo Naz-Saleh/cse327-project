@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
     <style>
-      /* Dashboard specific styles */
       .dashboard-container {
         padding-top: 100px;
         padding-bottom: 50px;
@@ -24,6 +23,8 @@
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         height: 100%;
+        display: flex;
+        flex-direction: column;
       }
       
       .news-card:hover {
@@ -35,7 +36,15 @@
       .card-img-top {
         height: 200px;
         object-fit: cover;
-        opacity: 0.8;
+        opacity: 0.9;
+        background-color: #1e1b4b; /* Fallback color */
+      }
+
+      .card-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
       }
 
       .news-category {
@@ -58,6 +67,28 @@
         font-size: 0.9rem;
         color: rgba(255, 255, 255, 0.7);
         margin-bottom: 1.5rem;
+        flex-grow: 1;
+      }
+
+      /* Category Pills Styles */
+      .nav-pills .nav-link {
+        color: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-right: 10px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .nav-pills .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .nav-pills .nav-link.active {
+        background-color: #ff6b6b;
+        border-color: #ff6b6b;
+        color: white;
       }
     </style>
   </head>
@@ -65,7 +96,7 @@
 
     <div class="bg-animated"></div>
 
-    <!-- Reuse Navbar -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top" style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px);">
       <div class="container">
         <a class="navbar-brand" href="{{ url_for('hello_world') }}">
@@ -86,52 +117,53 @@
     </nav>
 
     <div class="container dashboard-container">
-      <div class="row mb-5">
+      <div class="row mb-4">
         <div class="col-12">
           <h1 class="display-5 fw-bold font-monospace text-white">Your Feed</h1>
-          <p class="lead text-white-50">Curated stories for you today.</p>
+          <p class="lead text-white-50">Top Headlines</p>
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="row mb-5">
+        <div class="col-12">
+          <div class="nav nav-pills">
+            <a class="nav-link {% if current_category == 'general' %}active{% endif %}" href="{{ url_for('dashboard', category='general') }}">General</a>
+            <a class="nav-link {% if current_category == 'technology' %}active{% endif %}" href="{{ url_for('dashboard', category='technology') }}">Technology</a>
+            <a class="nav-link {% if current_category == 'business' %}active{% endif %}" href="{{ url_for('dashboard', category='business') }}">Business</a>
+            <a class="nav-link {% if current_category == 'science' %}active{% endif %}" href="{{ url_for('dashboard', category='science') }}">Science</a>
+            <a class="nav-link {% if current_category == 'health' %}active{% endif %}" href="{{ url_for('dashboard', category='health') }}">Health</a>
+            <a class="nav-link {% if current_category == 'sports' %}active{% endif %}" href="{{ url_for('dashboard', category='sports') }}">Sports</a>
+            <a class="nav-link {% if current_category == 'entertainment' %}active{% endif %}" href="{{ url_for('dashboard', category='entertainment') }}">Entertainment</a>
+          </div>
         </div>
       </div>
 
       <div class="row g-4">
-        <!-- Mock News Item 1 -->
-        <div class="col-md-4">
-          <div class="news-card">
-            <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
-            <div class="p-4">
-              <div class="news-category">Technology</div>
-              <h3 class="news-title">The Future of AI in Daily Life</h3>
-              <p class="news-summary">How machine learning is quietly reshaping our morning routines and work habits.</p>
-              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
+        
+        <!-- Loop through articles passed from app.py -->
+        {% if articles %}
+          {% for article in articles %}
+            {% if article.urlToImage %} <!-- Only show if image exists -->
+            <div class="col-md-4">
+              <div class="news-card">
+                <img src="{{ article.urlToImage }}" class="card-img-top" alt="News Image" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800';">
+                <div class="card-body">
+                  <div class="news-category">{{ article.source.name }}</div>
+                  <h3 class="news-title">{{ article.title }}</h3>
+                  <p class="news-summary">{{ article.description or 'Click below to read the full story.' }}</p>
+                  <a href="{{ article.url }}" target="_blank" class="text-white text-decoration-none fw-bold mt-auto">Read Story &rarr;</a>
+                </div>
+              </div>
             </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="col-12 text-center">
+            <p class="text-white-50">No news found for this category. Please check your internet connection.</p>
           </div>
-        </div>
+        {% endif %}
 
-        <!-- Mock News Item 2 -->
-        <div class="col-md-4">
-          <div class="news-card">
-            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
-            <div class="p-4">
-              <div class="news-category">Business</div>
-              <h3 class="news-title">Global Markets Rally</h3>
-              <p class="news-summary">Stocks hit record highs as new trade agreements are signed across major economies.</p>
-              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mock News Item 3 -->
-        <div class="col-md-4">
-          <div class="news-card">
-            <img src="https://images.unsplash.com/photo-1518005020951-ecc8e1201633?auto=format&fit=crop&q=80&w=800" class="card-img-top" alt="News Image">
-            <div class="p-4">
-              <div class="news-category">Science</div>
-              <h3 class="news-title">Mars Mission Update</h3>
-              <p class="news-summary">The latest rover sends back high-definition panoramas of the red planet's surface.</p>
-              <a href="#" class="text-white text-decoration-none fw-bold">Read Story &rarr;</a>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
