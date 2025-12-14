@@ -30,6 +30,8 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True) 
     password = db.Column(db.String(80), nullable=False)
+    # Relationship to access bookmarks easily
+    bookmarks = db.relationship('Bookmark', backref='user', lazy=True)
 
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,3 +46,12 @@ class Article(db.Model):
     category = db.Column(db.String(50), default=NewsCategory.PROTHOM_ALO.value) 
     
     fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Bookmark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
+    saved_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to get article details
+    article = db.relationship('Article')

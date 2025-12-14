@@ -1,6 +1,6 @@
-from flask import Flask, render_template, url_for, redirect, request
+from flask import Flask, render_template, url_for, redirect, request, flash
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
-from tables import db, User, Article, NewsCategory
+from tables import db, User, Article, NewsCategory, Bookmark
 from form import FormFactory, bcrypt
 import requests
 import xml.etree.ElementTree as ET 
@@ -163,19 +163,15 @@ def get_news_headlines(category, region='international', source='all', search_da
                         title = get_text_safe(item, 'title') or 'No Title'
                         link = get_text_safe(item, 'link') or '#'
                         
-                        # --- CRITICAL FIX: Handle Atom/Attribute Links ---
-                        # If standard text retrieval failed (returns '#'), look for href attribute
                         if link == '#':
                             for child in item:
                                 if child.tag.endswith('link') and child.get('href'):
                                     link = child.get('href')
                                     break
-                        # ------------------------------------------------
 
                         description = get_text_safe(item, 'description') or get_text_safe(item, 'summary') or ''
                         
                         image_url = None
-                        # Try finding image in description regex
                         if description:
                             img_match = re.search(r'src=["\']([^"\']+)["\']', description)
                             if img_match: image_url = img_match.group(1)
@@ -187,8 +183,7 @@ def get_news_headlines(category, region='international', source='all', search_da
                         if not image_url: image_url = url_for('static', filename=static_image)
                         if description: description = re.sub('<[^<]+?>', '', description)
                         
-                        # Ensure we have a valid link before saving to avoid collapsing articles
-                        if title != 'No Title' and link != '#':
+                        if title != 'No Title':
                             fresh_articles.append({
                                 'title': title,
                                 'url': link,
@@ -242,7 +237,6 @@ def get_news_headlines(category, region='international', source='all', search_da
                         exists = Article.query.filter_by(url=art.get('url')).first()
                         
                         if exists:
-                            # Update existing article timestamp to show it's fresh
                             exists.fetched_at = datetime.now()
                             exists.title = art.get('title')
                             exists.urlToImage = art.get('urlToImage')
@@ -272,6 +266,10 @@ def get_news_headlines(category, region='international', source='all', search_da
     db_articles = query.order_by(Article.fetched_at.desc()).limit(150).all() 
     
     articles_formatted = []
+    
+    # Pre-fetch bookmarked IDs for the current user
+    bookmarked_ids = [b.article_id for b in current_user.bookmarks]
+
     for a in db_articles:
         fetched_date_obj = a.fetched_at
         display_date = fetched_date_obj.strftime("%d %B, %Y")
@@ -282,13 +280,15 @@ def get_news_headlines(category, region='international', source='all', search_da
             display_date = "Yesterday"
 
         articles_formatted.append({
+            'id': a.id, # Need ID for bookmarking
             'title': a.title,
             'url': a.url,
             'urlToImage': a.urlToImage,
             'description': a.description,
             'source': {'name': a.source_name}, 
             'publishedAt': a.published_at,
-            'display_date': display_date
+            'display_date': display_date,
+            'is_bookmarked': a.id in bookmarked_ids
         })
         
     return articles_formatted
@@ -327,6 +327,44 @@ def dashboard():
                            current_date=selected_date,
                            categories=display_categories,
                            local_sources=LOCAL_SOURCES)
+
+@app.route('/bookmark/<int:article_id>', methods=['POST'])
+@login_required
+def toggle_bookmark(article_id):
+    bookmark = Bookmark.query.filter_by(user_id=current_user.id, article_id=article_id).first()
+    
+    if bookmark:
+        db.session.delete(bookmark)
+        db.session.commit()
+    else:
+        new_bookmark = Bookmark(user_id=current_user.id, article_id=article_id)
+        db.session.add(new_bookmark)
+        db.session.commit()
+        
+    # Redirect back to the referring page (dashboard or bookmarks page)
+    return redirect(request.referrer)
+
+@app.route('/bookmarks')
+@login_required
+def bookmarks():
+    # Fetch user's bookmarks
+    user_bookmarks = Bookmark.query.filter_by(user_id=current_user.id).order_by(Bookmark.saved_at.desc()).all()
+    
+    articles = []
+    for b in user_bookmarks:
+        a = b.article
+        articles.append({
+            'id': a.id,
+            'title': a.title,
+            'url': a.url,
+            'urlToImage': a.urlToImage,
+            'description': a.description,
+            'source': {'name': a.source_name}, 
+            'publishedAt': a.published_at,
+            'is_bookmarked': True
+        })
+        
+    return render_template('bookmarks.html', articles=articles)
 
 @app.route("/signup", methods=['GET', 'POST'])
 def signup():

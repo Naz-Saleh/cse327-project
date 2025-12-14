@@ -25,6 +25,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+        position: relative;
       }
       
       .news-card:hover {
@@ -33,11 +34,41 @@
         border-color: rgba(255, 107, 107, 0.5);
       }
 
+      .bookmark-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0, 0, 0, 0.6);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 10;
+      }
+
+      .bookmark-btn:hover {
+        background: white;
+      }
+
+      .bookmark-btn:hover svg path {
+        stroke: #ff6b6b;
+      }
+
+      .bookmark-btn.active svg path {
+        fill: #ff6b6b;
+        stroke: #ff6b6b;
+      }
+
       .card-img-top {
         height: 200px;
         object-fit: cover;
         opacity: 0.9;
-        background-color: #1e1b4b; /* Fallback color */
+        background-color: #1e1b4b; 
       }
 
       .card-body {
@@ -134,7 +165,7 @@
       /* Date Picker Styling */
       .date-filter-wrapper {
         position: absolute;
-        top: 100px; /* Aligns with top of content area */
+        top: 100px;
         right: 0;
         z-index: 100;
       }
@@ -165,11 +196,42 @@
         border-color: #ff6b6b;
       }
       
-      /* Only show calendar icon in white */
       ::-webkit-calendar-picker-indicator {
         filter: invert(1);
         opacity: 0.6;
         cursor: pointer;
+      }
+
+      /* Navbar Button Styles */
+      .navbar-btn-custom {
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+      }
+
+      .navbar-btn-custom:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .navbar-btn-accent {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+      }
+
+      .navbar-btn-accent:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+        color: white;
       }
     </style>
   </head>
@@ -189,9 +251,10 @@
         </a>
         
         <div class="collapse navbar-collapse">
-          <ul class="navbar-nav ms-auto align-items-center">
-            <li class="nav-item"><span class="nav-link text-white-50">Welcome, {{ current_user.username }}</span></li>
-            <li class="nav-item ms-3"><a class="btn btn-outline-custom btn-sm" href="{{ url_for('logout') }}">Logout</a></li>
+          <ul class="navbar-nav ms-auto align-items-center gap-2">
+            <li class="nav-item"><span class="nav-link text-white-50 small">Hi, {{ current_user.username }}</span></li>
+            <li class="nav-item"><a class="navbar-btn-custom" href="{{ url_for('bookmarks') }}">Bookmarks</a></li>
+            <li class="nav-item"><a class="navbar-btn-custom navbar-btn-accent" href="{{ url_for('logout') }}">Logout</a></li>
           </ul>
         </div>
       </div>
@@ -209,7 +272,6 @@
         <!-- Date Picker Column -->
         <div class="col-md-5 text-md-end">
            <form action="{{ url_for('dashboard') }}" method="GET" id="dateForm" class="d-flex justify-content-end align-items-center gap-2">
-             <!-- Preserve existing filters when changing date -->
              <input type="hidden" name="region" value="{{ current_region }}">
              <input type="hidden" name="category" value="{{ current_category }}">
              <input type="hidden" name="source" value="{{ current_source }}">
@@ -221,7 +283,7 @@
                     class="custom-date-input" 
                     value="{{ current_date or '' }}">
              
-             <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 20px;">Go</button>
+             <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 20px;">Search</button>
 
              {% if current_date %}
                 <a href="{{ url_for('dashboard', region=current_region, category=current_category, source=current_source) }}" 
@@ -291,7 +353,16 @@
             {% for article in group.list %}
               <div class="col-md-4">
                 <div class="news-card">
-                  <!-- Use image with fallback logic -->
+                  
+                  <!-- Bookmark Button -->
+                  <form action="{{ url_for('toggle_bookmark', article_id=article.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="bookmark-btn {% if article.is_bookmarked %}active{% endif %}" title="Bookmark">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 21L12 16L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </form>
+
                   <img src="{{ article.urlToImage or 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800' }}" 
                        class="card-img-top" 
                        alt="News Image" 
