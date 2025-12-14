@@ -31,7 +31,7 @@
 
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
-            <!-- Passing 'form-control' class to the WTForms field -->
+            
             {{ form.username(class="form-control") }}
             {% for error in form.username.errors %}
                 <span style="color: #ff6b6b; font-size: 0.8rem;">{{ error }}</span>

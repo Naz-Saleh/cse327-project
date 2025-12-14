@@ -1,8 +1,29 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+import enum
 
 db = SQLAlchemy()
+
+# 1. Define the categories here as the "Single Source of Truth"
+class NewsCategory(enum.Enum):
+    # International Categories
+    GENERAL = "general"
+    TECHNOLOGY = "technology"
+    BUSINESS = "business"
+    SCIENCE = "science"
+    HEALTH = "health"
+    SPORTS = "sports"
+    ENTERTAINMENT = "entertainment"
+    
+    # Local Sources (Bangladesh)
+    PROTHOM_ALO = "prothom_alo" 
+    DAILY_STAR = "daily_star"
+    BBC_BENGALI = "bbc_bengali"
+
+    @classmethod
+    def list(cls):
+        return [c.value for c in cls]
 
 class User(db.Model, UserMixin): 
     id = db.Column(db.Integer, primary_key=True)
@@ -18,6 +39,8 @@ class Article(db.Model):
     source_name = db.Column(db.String(100))
     description = db.Column(db.Text)
     published_at = db.Column(db.String(50))
-    # New field to distinguish between 'sports', 'technology', etc.
-    category = db.Column(db.String(50), default='general') 
+    
+    # Use the Enum value for the default
+    category = db.Column(db.String(50), default=NewsCategory.PROTHOM_ALO.value) 
+    
     fetched_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -70,6 +70,46 @@
         flex-grow: 1;
       }
 
+      .date-separator {
+        position: relative;
+        margin: 2rem 0 1.5rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+      }
+
+      /* Region Toggle Styles */
+      .region-toggle {
+        display: inline-flex;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 30px;
+        padding: 5px;
+        margin-bottom: 20px;
+      }
+      
+      .region-btn {
+        padding: 8px 20px;
+        border-radius: 25px;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+      }
+      
+      .region-btn:hover {
+        color: white;
+      }
+      
+      .region-btn.active {
+        background: #ff6b6b;
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+      }
+
       /* Category Pills Styles */
       .nav-pills .nav-link {
         color: rgba(255, 255, 255, 0.6);
@@ -89,6 +129,47 @@
         background-color: #ff6b6b;
         border-color: #ff6b6b;
         color: white;
+      }
+
+      /* Date Picker Styling */
+      .date-filter-wrapper {
+        position: absolute;
+        top: 100px; /* Aligns with top of content area */
+        right: 0;
+        z-index: 100;
+      }
+      
+      @media (max-width: 768px) {
+        .date-filter-wrapper {
+          position: relative;
+          top: 0;
+          margin-bottom: 1rem;
+          width: 100%;
+        }
+      }
+
+      .custom-date-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+      
+      .custom-date-input:focus {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: #ff6b6b;
+      }
+      
+      /* Only show calendar icon in white */
+      ::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        opacity: 0.6;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -116,55 +197,129 @@
       </div>
     </nav>
 
-    <div class="container dashboard-container">
+    <div class="container dashboard-container position-relative">
+      
+      <!-- Header Row -->
+      <div class="row mb-2 align-items-end">
+        <div class="col-md-7">
+          <h1 class="display-5 fw-bold font-monospace text-white">Your Feed</h1>
+          <p class="lead text-white-50">Stay Informed.</p>
+        </div>
+        
+        <!-- Date Picker Column -->
+        <div class="col-md-5 text-md-end">
+           <form action="{{ url_for('dashboard') }}" method="GET" id="dateForm" class="d-flex justify-content-end align-items-center gap-2">
+             <!-- Preserve existing filters when changing date -->
+             <input type="hidden" name="region" value="{{ current_region }}">
+             <input type="hidden" name="category" value="{{ current_category }}">
+             <input type="hidden" name="source" value="{{ current_source }}">
+             
+             <label for="date" class="text-white-50 small mb-0">Search History:</label>
+             <input type="date" 
+                    id="date"
+                    name="date" 
+                    class="custom-date-input" 
+                    value="{{ current_date or '' }}">
+             
+             <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 20px;">Go</button>
+
+             {% if current_date %}
+                <a href="{{ url_for('dashboard', region=current_region, category=current_category, source=current_source) }}" 
+                   class="btn btn-sm text-white-50 text-decoration-none">&times; Clear</a>
+             {% endif %}
+           </form>
+        </div>
+      </div>
+
+      <!-- Region Toggle -->
       <div class="row mb-4">
         <div class="col-12">
-          <h1 class="display-5 fw-bold font-monospace text-white">Your Feed</h1>
-          <p class="lead text-white-50">Top Headlines</p>
+          <div class="region-toggle">
+            <a href="{{ url_for('dashboard', region='local', date=current_date) }}" 
+               class="region-btn {% if current_region == 'local' %}active{% endif %}">
+               Local News (BD)
+            </a>
+            <a href="{{ url_for('dashboard', region='international', date=current_date) }}" 
+               class="region-btn {% if current_region == 'international' %}active{% endif %}">
+               International News
+            </a>
+          </div>
         </div>
       </div>
 
       <!-- Category Filter -->
-      <div class="row mb-5">
+      <div class="row mb-2">
         <div class="col-12">
           <div class="nav nav-pills">
-            <a class="nav-link {% if current_category == 'general' %}active{% endif %}" href="{{ url_for('dashboard', category='general') }}">General</a>
-            <a class="nav-link {% if current_category == 'technology' %}active{% endif %}" href="{{ url_for('dashboard', category='technology') }}">Technology</a>
-            <a class="nav-link {% if current_category == 'business' %}active{% endif %}" href="{{ url_for('dashboard', category='business') }}">Business</a>
-            <a class="nav-link {% if current_category == 'science' %}active{% endif %}" href="{{ url_for('dashboard', category='science') }}">Science</a>
-            <a class="nav-link {% if current_category == 'health' %}active{% endif %}" href="{{ url_for('dashboard', category='health') }}">Health</a>
-            <a class="nav-link {% if current_category == 'sports' %}active{% endif %}" href="{{ url_for('dashboard', category='sports') }}">Sports</a>
-            <a class="nav-link {% if current_category == 'entertainment' %}active{% endif %}" href="{{ url_for('dashboard', category='entertainment') }}">Entertainment</a>
+            {% for category in categories %}
+              <a class="nav-link {% if current_category == category %}active{% endif %}" 
+                 href="{{ url_for('dashboard', region=current_region, category=category, source=current_source, date=current_date) }}">
+                 {{ category.replace('_', ' ')|title }}
+              </a>
+            {% endfor %}
           </div>
         </div>
       </div>
 
-      <div class="row g-4">
-        
-        <!-- Loop through articles passed from app.py -->
-        {% if articles %}
-          {% for article in articles %}
-            {% if article.urlToImage %} <!-- Only show if image exists -->
-            <div class="col-md-4">
-              <div class="news-card">
-                <img src="{{ article.urlToImage }}" class="card-img-top" alt="News Image" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800';">
-                <div class="card-body">
-                  <div class="news-category">{{ article.source.name }}</div>
-                  <h3 class="news-title">{{ article.title }}</h3>
-                  <p class="news-summary">{{ article.description or 'Click below to read the full story.' }}</p>
-                  <a href="{{ article.url }}" target="_blank" class="text-white text-decoration-none fw-bold mt-auto">Read Story &rarr;</a>
+      <!-- Source Filter (Only for Local) -->
+      {% if current_region == 'local' %}
+      <div class="row mb-5">
+        <div class="col-12">
+           <div class="d-flex align-items-center gap-2">
+             <span class="text-white-50 small me-2" style="font-family: 'Poppins'; letter-spacing: 0.5px;">SOURCES:</span>
+             <div class="nav nav-pills">
+                {% for source in local_sources %}
+                  <a class="nav-link {% if current_source == source.id %}active{% endif %}" 
+                     href="{{ url_for('dashboard', region='local', category=current_category, source=source.id, date=current_date) }}"
+                     style="font-size: 0.85rem; padding: 5px 15px;">
+                     {{ source.name }}
+                  </a>
+                {% endfor %}
+             </div>
+           </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="mb-4"></div>
+      {% endif %}
+
+      <!-- Grouped Articles by Date -->
+      {% if articles %}
+        {% for group in articles|groupby('display_date') %}
+          <div class="date-separator">{{ group.grouper }}</div>
+          <div class="row g-4">
+            {% for article in group.list %}
+              <div class="col-md-4">
+                <div class="news-card">
+                  <!-- Use image with fallback logic -->
+                  <img src="{{ article.urlToImage or 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800' }}" 
+                       class="card-img-top" 
+                       alt="News Image" 
+                       onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800';">
+                  
+                  <div class="card-body">
+                    <div class="news-category">{{ article.source.name }}</div>
+                    <h3 class="news-title">{{ article.title }}</h3>
+                    <p class="news-summary">{{ article.description or 'Click below to read the full story.' }}</p>
+                    <a href="{{ article.url }}" target="_blank" class="text-white text-decoration-none fw-bold mt-auto">Read Story &rarr;</a>
+                  </div>
                 </div>
               </div>
-            </div>
-            {% endif %}
-          {% endfor %}
-        {% else %}
-          <div class="col-12 text-center">
-            <p class="text-white-50">No news found for this category. Please check your internet connection.</p>
+            {% endfor %}
           </div>
-        {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center mt-5">
+          <p class="text-white-50">
+            {% if current_date %}
+              No archived news found for {{ current_date }}.
+            {% else %}
+              No news found for this selection. Please check your internet connection.
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
 
-      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
